@@ -1,11 +1,41 @@
-# Emergent In-Context Learning in Transformers
+<div align="center">
 
-This is the codebase associated with the following paper:
+<h1>Reconciling In-Context and In-Weight Learning via Dual Representation Space Encoding</h1>
 
-**Data Distributional Properties Drive Emergent In-Context Learning in
-Transformers** ([arXiv](https://arxiv.org/abs/2205.05055))<br/>
-_Stephanie C.Y. Chan, Adam Santoro, Andrew K. Lampinen, Jane X. Wang, Aaditya
-Singh, Pierre H. Richemond, Jay McClelland, Felix Hill_
+Guanyu Chen<sup>1</sup>, Ruichen Wang<sup>1</sup>, [Tianren Zhang](https://trzhang0116.github.io/)<sup>1†</sup>, Feng Chen<sup>1†</sup>
+
+<br/>
+<sup>1</sup> Department of Automation, Tsinghua University
+<br/><br/>
+<sup>†</sup> Co-corresponding authors
+
+<br/><br/>
+
+[//]: # (<a href="https://openreview.net/forum?id=bJK7VIOWAU">)
+
+[//]: # (  <img src="https://img.shields.io/badge/OpenReview-bJK7VIOWAU-blue" alt="OpenReview">)
+
+[//]: # (</a>)
+
+[//]: # (<a href="https://openreview.net/pdf?id=bJK7VIOWAU">)
+
+[//]: # (  <img src="https://img.shields.io/badge/Paper-PDF-red" alt="Paper PDF">)
+
+[//]: # (</a>)
+
+[//]: # (<img src="https://img.shields.io/badge/TMLR-02%2F2026-4b8bbe" alt="TMLR">)
+
+</div>
+
+## Overview
+
+Transformers often exhibit a tension between **in-context learning (ICL)** and **in-weight learning (IWL)**.  
+This repo implements **CoQE**, a simple architectural modification that **separately encodes context and query samples into two distinct representation spaces**, and composes them via an inner product, which empirically reconciles ICL and IWL across synthetic settings.
+
+**Key idea.** Standard Transformers encode contextual/task information and sample information in a shared space, which can cause interference. CoQE decouples them into:
+
+- **Task representation space** (contextual encoder)
+- **Sample representation space** (token-wise/sample encoder)
 
 The experiments involve training and evaluating a transformer on sequences of
 [Omniglot](https://github.com/brendenlake/omniglot) image-label pairs, to elicit
