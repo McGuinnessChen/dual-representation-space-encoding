@@ -4,12 +4,12 @@
 
 Guanyu Chen<sup>1</sup>, Ruichen Wang<sup>1</sup>, [Tianren Zhang](https://trzhang0116.github.io/)<sup>1†</sup>, Feng Chen<sup>1†</sup>
 
-<br/>
+
 <sup>1</sup> Department of Automation, Tsinghua University
-<br/><br/>
+<br/>
 <sup>†</sup> Co-corresponding authors
 
-<br/><br/>
+
 
 [//]: # (<a href="https://openreview.net/forum?id=bJK7VIOWAU">)
 
