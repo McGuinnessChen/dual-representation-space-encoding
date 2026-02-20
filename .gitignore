@@ -21,7 +21,9 @@ share/python-wheels/
 tfds/
 *.egg-info/
 dual_transformer_omniglot_*/
+dual_transformer_llama3*/
 transformer_omniglot*/
+linear_transformer_omniglot*/
 transformer_llama3*/
 *.zip
 *.h5
