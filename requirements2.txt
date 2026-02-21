@@ -1,6 +1,0 @@
-dill==0.3.5.1
-dm-haiku==0.0.7
-ml_collections==0.1.1
-jaxline==0.0.5
-tensorflow==2.9.1
-tensorflow_datasets==4.6.0
