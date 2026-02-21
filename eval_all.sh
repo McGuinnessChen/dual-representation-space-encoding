@@ -11,8 +11,8 @@ for CKP_DIR in $BASE_DIR/*; do
 
   if [ -d "$CKP_DIR" ]; then
     echo "Running on checkpoint: $CKP_DIR"
-    python -m emergent_in_context_learning.experiment.experiment \
-      --config emergent_in_context_learning/experiment/configs/images_all_exemplars.py \
+    python -m dual-representation-space-encoding.experiment.experiment \
+      --config dual-representation-space-encoding/experiment/configs/images_all_exemplars.py \
       --logtostderr \
       --config.one_off_evaluate \
       --config.restore_path="$CKP_DIR" \
@@ -21,8 +21,8 @@ for CKP_DIR in $BASE_DIR/*; do
 
   if [ -d "$CKP_DIR" ]; then
     echo "Running on checkpoint: $CKP_DIR"
-    python -m emergent_in_context_learning.experiment.experiment \
-      --config emergent_in_context_learning/experiment/configs/images_all_exemplars.py \
+    python -m dual-representation-space-encoding.experiment.experiment \
+      --config dual-representation-space-encoding/experiment/configs/images_all_exemplars.py \
       --logtostderr \
       --config.one_off_evaluate \
       --config.restore_path="$CKP_DIR" \

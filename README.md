@@ -7,7 +7,7 @@ Guanyu Chen<sup>1</sup>, Ruichen Wang<sup>1</sup>, [Tianren Zhang](https://trzha
 
 <sup>1</sup> Department of Automation, Tsinghua University
 <br/>
-<sup>†</sup> Co-corresponding authors
+<sup>†</sup> Co-corresponding Authors
 
 
 
@@ -29,21 +29,41 @@ Guanyu Chen<sup>1</sup>, Ruichen Wang<sup>1</sup>, [Tianren Zhang](https://trzha
 
 ## Overview
 
-Transformers often exhibit a tension between **in-context learning (ICL)** and **in-weight learning (IWL)**.  
-This repo implements **CoQE**, a simple architectural modification that **separately encodes context and query samples into two distinct representation spaces**, and composes them via an inner product, which empirically reconciles ICL and IWL across synthetic settings.
+Transformers often exhibit a tension between **in-context learning (ICL)** and **in-weight learning (IWL)**. This repo implements **CoQE**, a simple architectural modification that **separately encodes context and query samples into two distinct representation spaces**, and composes them via an inner product, which empirically reconciles ICL and IWL across synthetic settings.
 
 **Key idea.** Standard Transformers encode contextual/task information and sample information in a shared space, which can cause interference. CoQE decouples them into:
 
-- **Task representation space** (contextual encoder)
-- **Sample representation space** (token-wise/sample encoder)
-
-The experiments involve training and evaluating a transformer on sequences of
-[Omniglot](https://github.com/brendenlake/omniglot) image-label pairs, to elicit
-and measure (few-shot) in-context learning vs in-weights learning. See Sec 2 of
-the paper for an overview of the experimental design.
+- **Task representation space** (contextual task encoder)
+- **Sample representation space** (token-wise sample encoder)
 
 
-## Installation
+This repository contains the following experiments:
+
+- **Regression experiments** (adapted from: https://github.com/dtsip/in-context-learning)
+- **Omniglot-sequence classification experiments**, including visualization analysis as well as **ICL** and **IWL** studies (adapted from: https://github.com/google-deepmind/emergent_in_context_learning)
+- **Extended experiments on LLaMA embedding sequences**
+- **Conditional Pseudo-Arithmetic Task**, a synthetic task constructed by us
+
+Please refer to the paper for full experimental details.
+
+## Regression
+### Installatioin
+Install the dependencies for our code using Conda. You may need to adjust the environment YAML file depending on your setup.
+
+    ```
+    conda env create -f regression/environment.yml
+    conda activate in-context-learning
+    cd regression
+    ```
+
+[Optional] If you plan to train, populate `conf/wandb.yaml` with you wandb info.
+
+You can now train your own. The key entry points are as follows (starting from `src`):
+- The `eval.ipynb` notebook contains code to  plot the pre-computed metrics, and evaluate them on new data.
+- `train.py` takes as argument a configuration yaml from `conf` and trains the corresponding model. You can try `python train.py --config conf/coqe_toy.yaml` for a quick training run.
+
+## Synthetic Few-shot Classification
+### Installation
 
 To install the necessary requirements:
 

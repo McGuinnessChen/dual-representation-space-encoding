@@ -33,3 +33,6 @@ transformer_llama3*/
 .installed.cfg
 *.egg
 MANIFEST
+command.sh
+omniglot_download.py
+plot_results.py
