@@ -23,7 +23,7 @@ Guanyu Chen<sup>1</sup>, Ruichen Wang<sup>1</sup>, [Tianren Zhang](https://trzha
 
 [//]: # (</a>)
 
-[//]: # (<img src="https://img.shields.io/badge/TMLR-02%2F2026-4b8bbe" alt="TMLR">)
+<img src="https://img.shields.io/badge/TMLR-2026-4b8bbe" alt="TMLR">
 
 </div>
 
