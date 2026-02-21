@@ -1,0 +1,33 @@
+inherit: 
+    - models/standard.yaml
+    - wandb.yaml
+
+model:
+    n_dims: 10
+    n_positions: 21
+
+training:
+    task: sparse_linear_regression
+    data: gaussian
+    task_kwargs: {"sparsity": 3}
+    batch_size: 64
+    learning_rate: 0.00005
+    save_every_steps: 1000
+    keep_every_steps: 100000
+    train_steps: 10001
+    curriculum:
+        dims:
+            start: 10
+            end: 10
+            inc: 1
+            interval: 2000
+        points:
+            start: 21
+            end: 21
+            inc: 2
+            interval: 2000
+
+out_dir: ../models/sparse_linear_regression
+
+wandb:
+    name: "sparse_regression_standard"
