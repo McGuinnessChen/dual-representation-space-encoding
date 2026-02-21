@@ -71,7 +71,7 @@ To install the necessary requirements:
 python3 -m venv eicl_venv
 source eicl_venv/bin/activate
 pip install --upgrade pip
-pip install -r ./emergent_in_context_learning/requirements.txt
+pip install -r ./dual-representation-space-encoding/requirements.txt
 ```
 
 ## Usage
@@ -134,7 +134,7 @@ repository into.
 To run training:
 
 ```shell
-$ python -m emergent_in_context_learning.experiment.experiment --config $PATH_TO_CONFIG --jaxline_mode train --logtostderr
+$ python -m dual-representation-space-encoding.experiment.experiment --config $PATH_TO_CONFIG --jaxline_mode train --logtostderr
 # (save checkpoints using Ctrl+C)
 ```
 
@@ -145,13 +145,13 @@ subdirectory of `config.checkpoint_dir` containing the relevant checkpoint
 To evaluate on in-context learning (on holdout classes):
 
 ```shell
-$ python -m emergent_in_context_learning.experiment.experiment --config $PATH_TO_CONFIG --logtostderr --config.one_off_evaluate --config.restore_path $CKPT_DIR --jaxline_mode eval_fewshot_holdout
+$ python -m dual-representation-space-encoding.experiment.experiment --config $PATH_TO_CONFIG --logtostderr --config.one_off_evaluate --config.restore_path $CKPT_DIR --jaxline_mode eval_fewshot_holdout
 ```
 
 To evaluate on in-weights learning (on trained classes):
 
 ```shell
-$ python -m emergent_in_context_learning.experiment.experiment --config $PATH_TO_CONFIG --logtostderr --config.one_off_evaluate --config.restore_path $CKPT_DIR --jaxline_mode eval_no_support_zipfian
+$ python -m dual-representation-space-encoding.experiment.experiment --config $PATH_TO_CONFIG --logtostderr --config.one_off_evaluate --config.restore_path $CKPT_DIR --jaxline_mode eval_no_support_zipfian
 ```
 
 ### End-to-end LLaMA3 embedding workflow
@@ -165,7 +165,7 @@ into the training pipeline.
 2. **Cluster token embeddings and pick exemplars** using the provided script:
 
    ```shell
-   python -m emergent_in_context_learning.scripts.build_llama3_embeddings \
+   python -m dual-representation-space-encoding.scripts.build_llama3_embeddings \
      --model /path/to/llama3/checkpoint \
      --output /path/to/llama3_embeddings.h5 \
      --num-classes 3200 \
@@ -212,7 +212,7 @@ The analysis script `analysis/common_context_umap.py` collects the transformer r
 For each common class, the script gathers a configurable number of samples for each condition, projects the resulting representations to 2-D using UMAP (default) or PCA, and saves both the scatter plot and the underlying metadata (CSV + NPZ).
 
 ```shell
-python -m emergent_in_context_learning.analysis.common_context_umap \
+python -m dual-representation-space-encoding.analysis.common_context_umap \
   --analysis_config experiment/configs/images_all_exemplars.py \
   --checkpoint $CKPT_DIR/checkpoint.dill \
   --output_dir /tmp/common_context_umap \
@@ -224,7 +224,7 @@ python -m emergent_in_context_learning.analysis.common_context_umap \
 checkpoint (e.g., one of the files under `experiment/configs/`). You can supply
 either a filesystem path such as
 `experiment/configs/images_all_exemplars.py` or the corresponding Python module
-path (`emergent_in_context_learning.experiment.configs.images_all_exemplars`).
+path (`dual-representation-space-encoding.experiment.configs.images_all_exemplars`).
 Adjust `--checkpoint` to point to the directory or file containing
 `checkpoint.dill`. Use `--projection_method pca` if you prefer PCA or you do not
 have `umap-learn` installed; otherwise, keep the default UMAP setting and adjust
@@ -238,7 +238,7 @@ If you already have a metadata NPZ file, you can regenerate the scatter plot wit
 loading a checkpoint:
 
 ```shell
-python -m emergent_in_context_learning.analysis.common_context_umap \
+python -m dual-representation-space-encoding.analysis.common_context_umap \
   --metadata_npz /tmp/common_context_umap/umap_data.npz \
   --output_dir /tmp/common_context_umap
 ```

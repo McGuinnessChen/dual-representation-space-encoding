@@ -119,82 +119,6 @@ class LinearTransformer(hk.Module):
         return logits
 
 
-
-
-
-
-# class Transformer(hk.Module):
-#   """Transformer tower."""
-#
-#   def __init__(self,
-#                input_embedder,
-#                num_classes=1623,
-#                num_layers=8,
-#                num_heads=8,
-#                dropout_prob=0.1,
-#                self_att_init_scale=1.0,
-#                dense_init_scale=1.0,
-#                name=None):
-#     """Initialize the Transformer tower.
-#
-#     Args:
-#       input_embedder: InputEmbedder object.
-#       num_classes: Total number of output classes.
-#       num_layers: Number of transformer blocks.
-#       num_heads: Number of transformer heads.
-#       dropout_prob: Dropout probability.
-#       self_att_init_scale: Scale for self-attention initialization.
-#       dense_init_scale: Scale for dense layer initialization.
-#       name: Optional name for the module.
-#     """
-#     super(Transformer, self).__init__(name=name)
-#     self._input_embedder = input_embedder
-#     self._num_classes = num_classes
-#     self._num_layers = num_layers
-#     self._num_heads = num_heads
-#     self._dropout_prob = dropout_prob
-#     self._self_att_init_scale = self_att_init_scale
-#     self._dense_init_scale = dense_init_scale
-#
-#   def __call__(self, examples, labels, mask=None, is_training=True):
-#     """Call to the Transformer tower.
-#
-#     Args:
-#       examples: input sequence of shape
-#         [batch_size, seq_len, height, width, channels]
-#       labels: input sequence of shape [batch_size, seq_len]
-#       mask: optional input mask of shape [batch_size, seq_len].
-#       is_training: if is currently training.
-#
-#     Returns:
-#       outputs: output of the transformer tower
-#         of shape [batch_size, seq_len, channels].
-#     """
-#     # Encode the examples and labels.
-#     hh = self._input_embedder(examples, labels, is_training)
-#
-#     if mask is not None:
-#       attention_mask = mask[:, None, None, :]
-#     else:
-#       attention_mask = None
-#
-#     for _ in range(self._num_layers):
-#       if mask is not None:
-#         hh *= mask[:, :, None]
-#       hh = transformer_core.TransformerBlock(
-#           causal=True,
-#           widening_factor=4,
-#           num_heads=self._num_heads,
-#           self_att_init_scale=self._self_att_init_scale,
-#           dense_init_scale=self._dense_init_scale,
-#           dropout_prob=self._dropout_prob)(
-#               hh, mask=attention_mask, is_training=is_training)
-#     hh = transformer_core.layer_norm(hh)
-#     if mask is not None:
-#       hh *= mask[:, :, None]  # (B,S,E)
-#     return transformer_core.conv1(
-#         hh, self._num_classes, init_scale=self._dense_init_scale)
-
 class Transformer(hk.Module):
   """Transformer tower."""
 
@@ -315,7 +239,7 @@ class Transformer(hk.Module):
 
     return logits
 
-class Dual_Transformer(hk.Module):
+class CoQE(hk.Module):
   """Transformer tower."""
 
   def __init__(self,
@@ -339,7 +263,7 @@ class Dual_Transformer(hk.Module):
       dense_init_scale: Scale for dense layer initialization.
       name: Optional name for the module.
     """
-    super(Dual_Transformer, self).__init__(name=name)
+    super(CoQE, self).__init__(name=name)
     self._input_embedder = input_embedder
     self._num_classes = num_classes
     self._num_layers = num_layers
@@ -420,8 +344,6 @@ class Dual_Transformer(hk.Module):
     sum_total = jnp.sum(sum_batch, axis=0)        # [C, D]
     count_total = jnp.sum(count_batch, axis=0)    # [C, 1]
     new_values = sum_total / (count_total + 1e-6) # [C, D]
-    # norm = jnp.linalg.norm(new_values, axis=-1, keepdims=True)
-    # new_values = new_values / (norm + 1e-6)
 
     # Step 5: update prototypes
     momentum = 0
@@ -430,68 +352,22 @@ class Dual_Transformer(hk.Module):
                                    momentum * prototypes + (1 - momentum) * new_values,
                                    prototypes)
 
-    # norm = jnp.linalg.norm(updated_prototypes, axis=-1, keepdims=True)
-    # updated_prototypes = updated_prototypes / norm
-    # jax.debug.print("norm1={}",norm)
     hk.set_state("class_prototypes", updated_prototypes)
 
     # Step 6: compute logits (dot product)
     context_logits = jnp.einsum("btd,cd->btc", base_feat, updated_prototypes)  # [B, S, C]
 
-    # norm = jnp.linalg.norm(task_feat, axis=-1, keepdims=True)
-    # task_feat = task_feat / (norm + 1e-6)
-    #
-    # hh_1 = base_feat * task_feat
-    # hh_1 = self.head(hh_1)
     base_logits = self.head(base_feat)
 
-    # ### NEW: 冻结最后一个 token 的最小 200 维 logit 并生成 stop-grad 副本 ###
-    # B, S, C = base_logits.shape
-    # last_t = S - 1
-    # # 取最后一个 token 的 logit
-    # last_logits = base_logits[:, last_t, :]  # [B, C]
-    #
-    # # 找出每行最小的 200 个值的下标
-    # _, min_idx = jax.lax.top_k(-last_logits, 500)  # [B, 200]
-    #
-    # # 计算这 200 个值的平均
-    # min_vals = jnp.take_along_axis(last_logits, min_idx, axis=-1)  # [B, 200]
-    # avg = jnp.mean(min_vals, axis=-1, keepdims=True)  # [B, 1]
-    #
-    # # 把平均值写回去
-    # last_logits_mod = last_logits.at[
-    #     jnp.arange(B)[:, None], min_idx
-    # ].set(avg)
-    #
-    # # 生成不能反传的副本
-    # last_logits_mod = jax.lax.stop_gradient(last_logits_mod)
-    #
-    # # 重新拼回 base_logits
-    # base_logits_mod = base_logits.at[:, last_t, :].set(last_logits_mod)
-    #
-    # ### END NEW ###
-
-    # === NEW2 ===
+    # === NEW ===
     B, S, C = base_logits.shape
     last_t = S - 1
     last_logits = base_logits[:, last_t, :]  # [B, C]
     dim_noise = 1500
-    # dim_noise = 1000
-    # dim_noise = 750
-    # dim_noise = 850
-    # 取最小 1000 个值的索引
     _, min_idx = jax.lax.top_k(-last_logits, dim_noise)  # [B, 1000]
 
     # 生成 N(3, 5) 的噪声
     key = hk.next_rng_key()
-
-    # def get_noise(train_step, key, B, dim_noise):
-    #     noise = jnp.where(train_step < 2e4,
-    #                       6.0 + 4.0 * jax.random.normal(key, (B, dim_noise)),
-    #                       jnp.where(train_step < 6e4,
-    #                                 8.0 + 6.0 * jax.random.normal(key, (B, dim_noise)),
-    #                                 10.0 + 8.0 * jax.random.normal(key, (B, dim_noise))))
-    #     return noise
 
     def get_noise(train_step, key, B, dim_noise):
         step = jnp.asarray(train_step, jnp.float32)
@@ -557,28 +433,4 @@ class Dual_Transformer(hk.Module):
     else:
         logits = jax.vmap(replace_last_step_logits)(base_logits, context_logits, labels[:, :-1])
 
-    # logits = base_logits
-    #
-    # B, S, C = base_logits.shape
-    # last_t = S - 1
-    #
-    # base_last = base_logits[:, last_t, :]  # [B, C]
-    # ctx_last = context_logits[:, last_t, :]  # [B, C]
-    #
-    # # 2. 构造「已见类」掩码  [B, C]
-    # label_rows = labels[:, :-1]  # [B, S-1]
-    # seen_mask = jnp.any(
-    #     jax.nn.one_hot(label_rows, num_classes=C),
-    #     axis=1)  # [B, C]
-    #
-    # # 3. 用 NaN 占位，再 flatten 到一维
-    # used_ctx = jnp.where(seen_mask, ctx_last, jnp.nan).ravel()  # [B*C]
-    # unused_ctx = jnp.where(~seen_mask, ctx_last, jnp.nan).ravel()  # [B*C]
-    # base_vec = base_last.ravel()  # [B*C]
-    #
-    # # 4. 返回张量（后面在 CPU 端过滤）
-    # stats = (used_ctx, unused_ctx, base_vec)
-    # jax.debug.print("base{}", base_logits[:, -1, :10])
-    # jax.debug.print("context{}", logits[:, -1, :10])
-    # jax.debug.print("label{}", labels[:, -1])
     return base_logits, logits

@@ -55,7 +55,7 @@ from emergent_in_context_learning.datasets import utils as dataset_utils
 from emergent_in_context_learning.modules import losses
 from emergent_in_context_learning.modules.embedding import InputEmbedder
 from emergent_in_context_learning.modules.rnn import RNN
-from emergent_in_context_learning.modules.transformer import Transformer, Dual_Transformer, LinearTransformer
+from emergent_in_context_learning.modules.transformer import Transformer, CoQE, LinearTransformer
 
 AUTOTUNE = tf.data.experimental.AUTOTUNE
 FLAGS = flags.FLAGS
@@ -169,7 +169,7 @@ class Experiment(experiment.AbstractExperiment):
     # Initialize model config.
     if self.config.seq_model == 'transformer':
       model_config = self.config.transformer
-    elif self.config.seq_model == 'dual_transformer':
+    elif self.config.seq_model == 'coqe':
       model_config = self.config.transformer
     elif self.config.seq_model == 'linear_transformer':
       model_config = self.config.transformer
@@ -198,8 +198,8 @@ class Experiment(experiment.AbstractExperiment):
     seq_model = self.config.seq_model
     if seq_model == 'transformer':
       model = Transformer(embedder, **self.model_config)
-    elif seq_model == 'dual_transformer':
-      model = Dual_Transformer(embedder, **self.model_config)
+    elif seq_model == 'coqe':
+      model = CoQE(embedder, **self.model_config)
     elif seq_model == 'linear_transformer':
       model = LinearTransformer(embedder, **self.model_config)
     elif seq_model in ['lstm', 'vanilla_rnn']:
@@ -207,7 +207,7 @@ class Experiment(experiment.AbstractExperiment):
     else:
       raise ValueError('Invalid config.seq_model: %s' % seq_model)
     # 打印模型参数量
-    if seq_model == 'dual_transformer':
+    if seq_model == 'coqe':
       return model(examples, labels, train_step, mask, is_training=is_training)
     else:
       return model(examples, labels, mask, is_training=is_training)
@@ -787,45 +787,63 @@ class Experiment(experiment.AbstractExperiment):
     """Applies an update to parameters and returns new state."""
     # This function computes the gradient of the first output of loss_fn and
     # passes through the other arguments unchanged.
-    grad_loss_fn = jax.grad(self._loss_fn, has_aux=True)
+    if self.config.seq_model == 'coqe':
+      grad_loss_fn = jax.grad(self._loss_fn2, has_aux=True)
+      grads, (state, logits, labels,
+              loss_acc_scalars) = grad_loss_fn(params, state, batch, rng, global_step)
+      grads = jax.lax.pmean(grads, axis_name='i')
+
+      # Compute and apply updates via our optimizer.
+      learning_rate = self._linear_warmup_and_sqrt_decay(global_step)
+      _, opt_update = self.optimizer(learning_rate)
+      updates, opt_state = opt_update(grads, opt_state)
+      params = optax.apply_updates(params, updates)
+
+      # Scalars to log (note: we log the mean across all hosts/devices).
+      scalars = jax.lax.pmean(loss_acc_scalars, axis_name='i')
+
+      return params, state, opt_state, scalars, logits, labels
+
+    else:
+      grad_loss_fn = jax.grad(self._loss_fn, has_aux=True)
+      grads, (state, logits, labels,
+              loss_acc_scalars) = grad_loss_fn(params, state, batch, rng)
+      grads = jax.lax.pmean(grads, axis_name='i')
+
+      # Compute and apply updates via our optimizer.
+      learning_rate = self._linear_warmup_and_sqrt_decay(global_step)
+      _, opt_update = self.optimizer(learning_rate)
+      # AdamW
+      updates, opt_state = opt_update(grads, opt_state, params)
+      # Adam
+      # updates, opt_state = opt_update(grads, opt_state)
+      params = optax.apply_updates(params, updates)
+
+      # Scalars to log (note: we log the mean across all hosts/devices).
+      scalars = jax.lax.pmean(loss_acc_scalars, axis_name='i')
+
+      return params, state, opt_state, scalars, logits, labels
+
+
+  def _update_func(self, params, state, opt_state, global_step, batch, rng):
+    """Applies an update to parameters and returns new state."""
+    # This function computes the gradient of the first output of loss_fn and
+    # passes through the other arguments unchanged.
+    grad_loss_fn = jax.grad(self._loss_fn2, has_aux=True)
     grads, (state, logits, labels,
-            loss_acc_scalars) = grad_loss_fn(params, state, batch, rng)
+            loss_acc_scalars) = grad_loss_fn(params, state, batch, rng, global_step)
     grads = jax.lax.pmean(grads, axis_name='i')
 
     # Compute and apply updates via our optimizer.
     learning_rate = self._linear_warmup_and_sqrt_decay(global_step)
     _, opt_update = self.optimizer(learning_rate)
-    # AdamW
-    updates, opt_state = opt_update(grads, opt_state, params)
-    # Adam
-    # updates, opt_state = opt_update(grads, opt_state)
+    updates, opt_state = opt_update(grads, opt_state)
     params = optax.apply_updates(params, updates)
 
     # Scalars to log (note: we log the mean across all hosts/devices).
     scalars = jax.lax.pmean(loss_acc_scalars, axis_name='i')
 
     return params, state, opt_state, scalars, logits, labels
-
-  # dual_transformer
-  # def _update_func(self, params, state, opt_state, global_step, batch, rng):
-  #   """Applies an update to parameters and returns new state."""
-  #   # This function computes the gradient of the first output of loss_fn and
-  #   # passes through the other arguments unchanged.
-  #   grad_loss_fn = jax.grad(self._loss_fn2, has_aux=True)
-  #   grads, (state, logits, labels,
-  #           loss_acc_scalars) = grad_loss_fn(params, state, batch, rng, global_step)
-  #   grads = jax.lax.pmean(grads, axis_name='i')
-  #
-  #   # Compute and apply updates via our optimizer.
-  #   learning_rate = self._linear_warmup_and_sqrt_decay(global_step)
-  #   _, opt_update = self.optimizer(learning_rate)
-  #   updates, opt_state = opt_update(grads, opt_state)
-  #   params = optax.apply_updates(params, updates)
-  #
-  #   # Scalars to log (note: we log the mean across all hosts/devices).
-  #   scalars = jax.lax.pmean(loss_acc_scalars, axis_name='i')
-  #
-  #   return params, state, opt_state, scalars, logits, labels
 
   def _vector_to_square(self, vector):
     """Convert 1-D array into a square-ish 2-D array."""
@@ -878,14 +896,8 @@ class Experiment(experiment.AbstractExperiment):
         params, state, examples=batch['examples'], labels=batch['labels'],
         mask=None, rng=rng, is_training=False)  # [B, T, K]
 
-    # dual_transformer
-    # logits = logits[1]
-
-    # jax.debug.print("{}", params.keys())
-    # head_weight = params['dual__transformer/~/linear']["w"]
-    # norm = jnp.linalg.norm(head_weight, axis=0, keepdims=True)
-    # print(norm.shape)
-    # jax.debug.print("norm2={}", norm)
+    if self.config.seq_model == 'coqe':
+      logits = logits[1]
 
     labels = batch['target']  # [B, T]
 
