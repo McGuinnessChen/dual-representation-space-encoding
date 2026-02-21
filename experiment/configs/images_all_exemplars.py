@@ -101,7 +101,7 @@ def get_config(debug=False):
                   use_positional_encodings=True,
                   positional_dropout_prob=0.0,
               ),
-              seq_model='transformer',  # 'linear_transformer'/'dual_transformer'/'transformer'/'lstm'/'vanilla_rnn'
+              seq_model='transformer',  # 'linear_transformer'/'coqe'/'transformer'/'lstm'/'vanilla_rnn'
               transformer=dict(
                   num_classes=None,  # is set later, depending on data config
                   num_layers=m(12, 2), # m(12, 2),
@@ -123,7 +123,7 @@ def get_config(debug=False):
   config.log_tensors_interval = 60
   config.save_checkpoint_interval = 500
   config.train_checkpoint_all_hosts = False
-  config.checkpoint_dir = 'emergent_in_context_learning//transformer_omniglot_9_layer12_p0.9_z2/'
+  config.checkpoint_dir = './/transformer_omniglot_9_layer12_p0.9_z2/'
   config.eval_specific_checkpoint_dir = ''
   config.restore_path = ''
 

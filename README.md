@@ -74,8 +74,6 @@ pip install --upgrade pip
 pip install -r ./dual-representation-space-encoding/requirements.txt
 ```
 
-## Usage
-
 ### Default configs
 
 Default experiment configurations are provided in `configs/`, and can be used
@@ -153,55 +151,7 @@ To evaluate on in-weights learning (on trained classes):
 ```shell
 $ python -m dual-representation-space-encoding.experiment.experiment --config $PATH_TO_CONFIG --logtostderr --config.one_off_evaluate --config.restore_path $CKPT_DIR --jaxline_mode eval_no_support_zipfian
 ```
-
-### End-to-end LLaMA3 embedding workflow
-
-You only need to download the LLaMA3 checkpoint; the repository provides the
-clustering and exemplar selection steps required to feed the model embeddings
-into the training pipeline.
-
-1. **Download the LLaMA3 weights** from Hugging Face to a local directory. The
-   remaining steps operate purely on the model files.
-2. **Cluster token embeddings and pick exemplars** using the provided script:
-
-   ```shell
-   python -m dual-representation-space-encoding.scripts.build_llama3_embeddings \
-     --model /path/to/llama3/checkpoint \
-     --output /path/to/llama3_embeddings.h5 \
-     --num-classes 3200 \
-     --exemplars-per-class 5 \
-     --seed 0 \
-     --skip-special-tokens
-   ```
-
-   The script extracts the model's input embedding table, keeps only tokens
-   composed solely of English letters/underscores, projects them to 1024
-   dimensions with PCA, L2-normalizes the projected vectors, and performs
-   spherical k-means clustering with FAISS. It over-clusters by 1.5× the
-   requested class count (e.g., 4800 for a 3200-class run or 2400 for a 1600-
-   class run), keeps the largest clusters that contain more than the exemplar
-   threshold (e.g., >5 or >10 tokens), then selects exemplars from those
-   clusters. The saved embeddings, token IDs, and centroids live at
-   `<seed>/<exemplars>/feat` inside the HDF5 file (matching the
-   `llama3_embeddings.py` config) and have 1024-dimensional features after the
-   PCA projection. Adjust `--num-classes`, `--exemplars-per-class`, or
-   `--dataset-path` if you want a different split.
-3. **Point the experiment config at your artifact.** Update the
-   `DEFAULT_EMBED_PATH` and `DEFAULT_DATASET_PATH` values in
-   `experiment/configs/llama3_embeddings.py` (or override them on the command
-   line) so training consumes the generated file. `DEFAULT_EMBED_PATH` should
-   point to the HDF5 file produced by `build_llama3_embeddings.py`, and
-   `DEFAULT_DATASET_PATH` defaults to `0/5/feat`, matching the seed/exemplar
-   layout inside that file (`<seed>/<exemplars>/feat`). The class constants in
-   the config (`LLAMA3_TOTAL_CLASSES`, `LLAMA3_RARE_CLASSES`,
-   `LLAMA3_COMMON_CLASSES`) mirror the 3200-class artifact: 1600 classes are
-   treated as rare and 1600 as common during sequence generation. Then launch
-   training with the commands above using `experiment/configs/llama3_embeddings.py`
-   as the `$PATH_TO_CONFIG`. The LLaMA3 config defaults to `p_bursty=1.0` and
-   `p_bursty_zipfian=0.0`, so sequences are always bursty and avoid zipfian
-   sampling by default.
-
-### Visualizing common-class query representations
+## Visualizing Query Representations
 
 The analysis script `analysis/common_context_umap.py` collects the transformer representation of the final (query) token for common classes across three evaluation conditions:
 
@@ -246,6 +196,55 @@ python -m dual-representation-space-encoding.analysis.common_context_umap \
 The script automatically infers the projection method from the NPZ (falling back to
 `--projection_method` if necessary) and reuses the cached coordinates to produce a
 fresh plot.
+
+## LLaMA3 Embedding Workflow
+
+You only need to download the LLaMA3 checkpoint; the repository provides the
+clustering and exemplar selection steps required to feed the model embeddings
+into the training pipeline.
+
+1. **Download the LLaMA3 weights** from Hugging Face to a local directory. The
+   remaining steps operate purely on the model files.
+2. **Cluster token embeddings and pick exemplars** using the provided script:
+
+   ```shell
+   python -m dual-representation-space-encoding.build_llama3_embeddings \
+     --model /path/to/llama3/checkpoint \
+     --output /path/to/llama3_embeddings.h5 \
+     --num-classes 3200 \
+     --exemplars-per-class 5 \
+     --seed 0 \
+     --skip-special-tokens
+   ```
+
+   The script extracts the model's input embedding table, keeps only tokens
+   composed solely of English letters/underscores, projects them to 1024
+   dimensions with PCA, L2-normalizes the projected vectors, and performs
+   spherical k-means clustering with FAISS. It over-clusters by 1.5× the
+   requested class count (e.g., 4800 for a 3200-class run or 2400 for a 1600-
+   class run), keeps the largest clusters that contain more than the exemplar
+   threshold (e.g., >5 or >10 tokens), then selects exemplars from those
+   clusters. The saved embeddings, token IDs, and centroids live at
+   `<seed>/<exemplars>/feat` inside the HDF5 file (matching the
+   `llama3_embeddings.py` config) and have 1024-dimensional features after the
+   PCA projection. Adjust `--num-classes`, `--exemplars-per-class`, or
+   `--dataset-path` if you want a different split.
+3. **Point the experiment config at your artifact.** Update the
+   `DEFAULT_EMBED_PATH` and `DEFAULT_DATASET_PATH` values in
+   `experiment/configs/llama3_embeddings.py` (or override them on the command
+   line) so training consumes the generated file. `DEFAULT_EMBED_PATH` should
+   point to the HDF5 file produced by `build_llama3_embeddings.py`, and
+   `DEFAULT_DATASET_PATH` defaults to `0/5/feat`, matching the seed/exemplar
+   layout inside that file (`<seed>/<exemplars>/feat`). The class constants in
+   the config (`LLAMA3_TOTAL_CLASSES`, `LLAMA3_RARE_CLASSES`,
+   `LLAMA3_COMMON_CLASSES`) mirror the 3200-class artifact: 1600 classes are
+   treated as rare and 1600 as common during sequence generation. Then launch
+   training with the commands above using `experiment/configs/llama3_embeddings.py`
+   as the `$PATH_TO_CONFIG`. The LLaMA3 config defaults to `p_bursty=1.0` and
+   `p_bursty_zipfian=0.0`, so sequences are always bursty and avoid zipfian
+   sampling by default.
+
+
 
 ## Citation
 
