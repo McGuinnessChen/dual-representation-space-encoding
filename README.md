@@ -246,7 +246,7 @@ into the training pipeline.
 
 ## Conditional Pseudo-Arithmetic Task
 
-You can try `python conditional_pseudo_arithmetic.py` for a quick training run. Set `METHOD` in `main.py` to choose finetuning method.
+You can try `python conditional_pseudo_arithmetic.py` for a quick training run. Set `METHOD` to choose finetuning method.
 
 ## Citation
 
