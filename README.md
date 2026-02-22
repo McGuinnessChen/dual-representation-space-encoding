@@ -151,7 +151,7 @@ To evaluate on in-weights learning (on trained classes):
 ```shell
 $ python -m dual-representation-space-encoding.experiment.experiment --config $PATH_TO_CONFIG --logtostderr --config.one_off_evaluate --config.restore_path $CKPT_DIR --jaxline_mode eval_no_support_zipfian
 ```
-## Visualizing Query Representations
+### Visualizing Query Representations
 
 The analysis script `analysis/common_context_umap.py` collects the transformer representation of the final (query) token for common classes across three evaluation conditions:
 
@@ -244,7 +244,9 @@ into the training pipeline.
    `p_bursty_zipfian=0.0`, so sequences are always bursty and avoid zipfian
    sampling by default.
 
+## Conditional Pseudo-Arithmetic Task
 
+You can try `python conditional_pseudo_arithmetic.py` for a quick training run. Set `METHOD` in `main.py` to choose finetuning method.
 
 ## Citation
 
