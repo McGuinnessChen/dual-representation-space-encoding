@@ -17,13 +17,13 @@ Guanyu Chen<sup>1</sup>, Ruichen Wang<sup>1</sup>, [Tianren Zhang](https://trzha
 
 [//]: # (</a>)
 
-[//]: # (<a href="https://openreview.net/pdf?id=bJK7VIOWAU">)
+<a href="https://openreview.net/pdf?id=bJK7VIOWAU">
 
-[//]: # (  <img src="https://img.shields.io/badge/Paper-PDF-red" alt="Paper PDF">)
+  <img src="https://img.shields.io/badge/TMLR-02/2026-4b8bbe" alt="TMLR">
 
-[//]: # (</a>)
+</a>
 
-<img src="https://img.shields.io/badge/TMLR-2026-4b8bbe" alt="TMLR">
+
 
 </div>
 
