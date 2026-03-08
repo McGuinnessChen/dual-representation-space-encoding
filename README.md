@@ -250,33 +250,20 @@ You can try `python conditional_pseudo_arithmetic.py` for a quick training run. 
 
 ## Citation
 
-[//]: # (If you use this work, please cite the following paper)
+If you use this work, please cite the following paper
 
-[//]: # (```)
+```
+@article{
+chen2026reconciling,
+title={Reconciling In-Context and In-Weight Learning via Dual Representation Space Encoding},
+author={Guanyu Chen and Ruichen Wang and Tianren Zhang and Feng Chen},
+journal={Transactions on Machine Learning Research},
+issn={2835-8856},
+year={2026},
+url={https://openreview.net/forum?id=bJK7VIOWAU},
+note={}
+}
+```
 
-[//]: # (@misc{chan_data_2022,)
-
-[//]: # (  title = {Data Distributional Properties Drive Emergent In-Context Learning in Transformers},)
-
-[//]: # (  author = {Chan, Stephanie C. Y. and Santoro, Adam and Lampinen, Andrew K. and Wang, Jane X. and Singh, Aaditya and Richemond, Pierre H. and McClelland, Jay and Hill, Felix},)
-
-[//]: # (  journal = {Neural Information Processing Systems},)
-
-[//]: # (  year = {2022},)
-
-[//]: # (})
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (We would also like to thank the following colleagues for their contributions to)
-
-[//]: # (the implementation of the transformer model:)
-
-[//]: # (Igor Babuschkin, Junyoung Chung, David Choi, Tamara Norman, Sebastian Borgeaud,)
-
-[//]: # (Jack Rae, David Saxton, Yujia Li, Phil Blunsom, Maribeth Rauh, Roman Ring,)
-
-[//]: # (Nate Kushman, Vinicius Zambaldi, Tom Hennigan)
 
 
